@@ -15,6 +15,18 @@ type Host struct {
 	ID       int64  `json:"id"`
 	Name     string `json:"name"`
 	Hostname string `json:"hostname"`
+
+	Cert       apsql.NullString `json:"-" db:"cert"`
+	PrivateKey apsql.NullString `json:"-" db:"private_key"`
+	ForceSSL   bool             `json:"forceSSL" db:"force_ssl"`
+}
+
+func (h *Host) CertContents() string {
+	return h.Cert.String
+}
+
+func (h *Host) PrivateKeyContents() string {
+	return h.PrivateKey.String
 }
 
 // Validate validates the model.

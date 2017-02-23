@@ -95,7 +95,18 @@ func (s *Server) Run() {
 	}
 	adminAvailable := fmt.Sprintf("%s:%d%s", adminHost, s.proxyConf.Port, s.adminConf.PathPrefix)
 	logreport.Printf("%s Admin dashboard available at %s", config.Admin, adminAvailable)
-	logreport.Fatalf("%s %v", config.System, http.ListenAndServe(listen, s.router))
+
+	var handler http.Handler
+	if s.Conf.UseTLS {
+		handler = &tlsRedirectRouter{s.router, &s.conf, s.proxyData}
+		tls := NewTlsServer(s, s.router)
+		go tls.Listen()
+	} else {
+		handler = s.router
+	}
+
+	httplisten := fmt.Sprintf("%s:%d", s.proxyConf.Host, s.proxyConf.Port)
+	logreport.Fatalf("%s %v", config.System, http.ListenAndServe(httplisten, handler))
 }
 
 func (s *Server) isRoutedToEndpoint(r *http.Request, rm *mux.RouteMatch) bool {

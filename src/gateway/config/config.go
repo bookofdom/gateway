@@ -23,6 +23,7 @@ type Configuration struct {
 	File          string `flag:"config" default:"gateway.conf"`
 	Server        bool   `flag:"server" default:"false"`
 	Jobs          bool   `flag:"jobs" default:"true"`
+	UseTLS        bool   `flag:"use-tls" default:"false"`
 
 	Airbrake       Airbrake
 	Database       Database
@@ -115,6 +116,11 @@ type ProxyServer struct {
 
 	KeyCacheSize            int64 `flag:"proxy-key-cache-size" default:"0"`
 	RemoteEndpointCacheSize int64 `flag:"proxy-remote-endpoint-cache-size" default:"0"`
+
+	TLSKeyContent    string `flag:"proxy-key-content" default:""`
+	TLSCertContent   string `flag:"proxy-cert-content" default:""`
+	TLSCacertContent string `flag:"proxy-ca-cert-content" default:""`
+	TLSPort          int64  `flag:"proxy-tls-port" default:"5001"`
 }
 
 // BackgroundJob specifies configuration options that apply to jobs.
@@ -205,6 +211,10 @@ type ProxyAdmin struct {
 	WsReadDeadline      int64  `flag:"ws-read-deadline" default:"10"`
 
 	ReplMaximumFrameSize int64 `flag:"repl-maximum-frame-size" default:"1024"`
+
+	TLSKeyContent    string `flag:"admin-key-content" default:""`
+	TLSCertContent   string `flag:"admin-cert-content" default:""`
+	TLSCacertContent string `flag:"admin-ca-cert-content" default:""`
 }
 
 type ElasticLogging struct {

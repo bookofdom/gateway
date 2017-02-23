@@ -40,6 +40,7 @@ var usageStrings = map[string]string{
 	"config":         "The path to the configuration file",
 	"server":         "Whether or not to run in server mode",
 	"jobs":           "Run background jobs",
+	"use-tls":        "If true, server will start a second listener to handle TLS connections and redirect requests to SSL if a Host is configured to support it. Default is false.",
 
 	"airbrake-api-key":     "The API key to use for Airbrake notifications",
 	"airbrake-project-id":  "The ID assigned to your Airbrake project",
@@ -136,6 +137,11 @@ var usageStrings = map[string]string{
 
 	"admin-google-analytics-tracking-id": "A Google Analytics Tracking ID to be used by the rendered Admin UI.",
 
+	// TODO descriptions
+	"admin-key-content":     "",
+	"admin-cert-content":    "",
+	"admin-ca-cert-content": "",
+
 	"stripe-secret-key":       "Stripe API Secret Key",
 	"stripe-publishable-key":  "Stripe API Publishable Key",
 	"stripe-fallback-plan":    "Stripe plan to fallback on when subscription billing fails (this uses the internal Gateway plan name)",
@@ -147,6 +153,11 @@ var usageStrings = map[string]string{
 	"ws-write-deadline":       "The amount of time in seconds to wait for successful websocket writes to Admin API connected websocket clients before closing the connection. Defaults to 10.",
 	"ws-read-deadline":        "The amount of time in seconds to wait for successful websocket reads to Admin API connected websocket clients before closing the connection. Defaults to 10.",
 	"repl-maximum-frame-size": "The maximimum size in bytes of the REPL websocket frames. Default is 1024 bytes (1 kb)",
+
+	"proxy-key-content":     "The base64 encoded private key PEM file contents to use when hosting the proxy with TLS. Default is blank.",
+	"proxy-cert-content":    "The base64 encoded cert PEM file contents to use when hosting the proxy with TLS. Default is blank.",
+	"proxy-ca-cert-content": "The base64 encoded CA cert PEM file contents to use when hosting the proxy with TLS. Default is blank.",
+	"proxy-tls-port":        "The port to listen for TLS connections on. Default is 5001.",
 
 	"elastic-logging-url":          "The url of the elastic server",
 	"elastic-logging-delete-after": "How long in days to keep logs",
