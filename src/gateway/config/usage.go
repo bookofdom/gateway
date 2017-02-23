@@ -137,10 +137,8 @@ var usageStrings = map[string]string{
 
 	"admin-google-analytics-tracking-id": "A Google Analytics Tracking ID to be used by the rendered Admin UI.",
 
-	// TODO descriptions
-	"admin-key-content":     "",
-	"admin-cert-content":    "",
-	"admin-ca-cert-content": "",
+	"admin-key-content":  "The base64 encoded private key PEM file contents for the admin UI with TLS. Default is blank.",
+	"admin-cert-content": "The base64 encoded cert PEM file contents the admin UI with TLS. Default is blank.",
 
 	"stripe-secret-key":       "Stripe API Secret Key",
 	"stripe-publishable-key":  "Stripe API Publishable Key",

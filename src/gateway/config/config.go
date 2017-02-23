@@ -212,9 +212,8 @@ type ProxyAdmin struct {
 
 	ReplMaximumFrameSize int64 `flag:"repl-maximum-frame-size" default:"1024"`
 
-	TLSKeyContent    string `flag:"admin-key-content" default:""`
-	TLSCertContent   string `flag:"admin-cert-content" default:""`
-	TLSCacertContent string `flag:"admin-ca-cert-content" default:""`
+	TLSKeyContent  string `flag:"admin-key-content" default:""`
+	TLSCertContent string `flag:"admin-cert-content" default:""`
 }
 
 type ElasticLogging struct {
