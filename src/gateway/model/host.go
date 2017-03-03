@@ -1,6 +1,8 @@
 package model
 
 import (
+	"crypto/tls"
+	"encoding/json"
 	"errors"
 	aperrors "gateway/errors"
 	apsql "gateway/sql"
@@ -16,9 +18,9 @@ type Host struct {
 	Name     string `json:"name"`
 	Hostname string `json:"hostname"`
 
-	Cert       apsql.NullString `json:"-" db:"cert"`
-	PrivateKey apsql.NullString `json:"-" db:"private_key"`
-	ForceSSL   bool             `json:"forceSSL" db:"force_ssl"`
+	Cert       apsql.NullString `json:"cert" db:"cert"`
+	PrivateKey apsql.NullString `json:"private_key" db:"private_key"`
+	ForceSSL   bool             `json:"force_ssl" db:"force_ssl"`
 }
 
 func (h *Host) CertContents() string {
@@ -29,6 +31,28 @@ func (h *Host) PrivateKeyContents() string {
 	return h.PrivateKey.String
 }
 
+func (h *Host) SetCertContents(val string) {
+	h.Cert.Scan(val)
+}
+
+func (h *Host) SetPrivateKeyContents(val string) {
+	h.PrivateKey.Scan(val)
+}
+
+func (h *Host) MarshalJSON() ([]byte, error) {
+	// custom MarshalJSON to exclude Cert and PrivateKey from
+	// being included in the JSON
+	temp := &struct {
+		APIID    int64  `json:"api_id"`
+		ID       int64  `json:"id"`
+		Name     string `json:"name"`
+		Hostname string `json:"hostname"`
+		ForceSSL bool   `json:"force_ssl"`
+	}{h.APIID, h.ID, h.Name, h.Hostname, h.ForceSSL}
+
+	return json.Marshal(temp)
+}
+
 // Validate validates the model.
 func (h *Host) Validate(isInsert bool) aperrors.Errors {
 	errors := make(aperrors.Errors)
@@ -37,6 +61,24 @@ func (h *Host) Validate(isInsert bool) aperrors.Errors {
 	}
 	if h.Hostname == "" {
 		errors.Add("hostname", "must not be blank")
+	}
+	if h.CertContents() != "" || h.PrivateKeyContents() != "" {
+		_, err := parsePem([]byte(h.PrivateKeyContents()))
+		if err != nil {
+			errors.Add("private_key", err.Error())
+		}
+
+		_, err = parsePem([]byte(h.CertContents()))
+		if err != nil {
+			errors.Add("cert", err.Error())
+		}
+
+		_, err = tls.X509KeyPair([]byte(h.CertContents()), []byte(h.PrivateKeyContents()))
+		if err != nil {
+			errors.Add("private_key", "invalid key pair")
+			errors.Add("cert", "invalid key pair")
+		}
+
 	}
 	return errors
 }
@@ -111,7 +153,7 @@ func FindHostForHostname(db *apsql.DB, hostname string) (*Host, error) {
 // Insert inserts the host into the database as a new row.
 func (h *Host) Insert(tx *apsql.Tx) (err error) {
 	h.ID, err = tx.InsertOne(tx.SQL("hosts/insert"),
-		h.APIID, h.AccountID, h.Name, h.Hostname)
+		h.APIID, h.AccountID, h.Name, h.Hostname, h.Cert, h.PrivateKey, h.ForceSSL)
 	if err != nil {
 		return err
 	}
@@ -126,7 +168,7 @@ func (h *Host) Insert(tx *apsql.Tx) (err error) {
 // Update updates the host in the database.
 func (h *Host) Update(tx *apsql.Tx) error {
 	err := tx.UpdateOne(tx.SQL("hosts/update"),
-		h.Name, h.Hostname, h.ID, h.APIID, h.AccountID)
+		h.Name, h.Hostname, h.Cert, h.PrivateKey, h.ForceSSL, h.ID, h.APIID, h.AccountID)
 	if err != nil {
 		return err
 	}
