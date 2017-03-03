@@ -82,7 +82,6 @@ func (p *parsedCertCache) get(serverName string) (*tls.Certificate, error) {
 
 	// check if the host has custom certs
 	if host.CertContents() == "" || host.PrivateKeyContents() == "" {
-		// If host is using a default proxy host name, not a custom host name
 		return nil, fmt.Errorf("SSL not configured for %s", host.Hostname)
 	}
 
