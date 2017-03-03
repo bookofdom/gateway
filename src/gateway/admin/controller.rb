@@ -9,6 +9,7 @@ singular = nil
 json = nil
 transform_method = nil
 transform_type = nil
+parse_data_url = false
 account = false
 api = false
 reflect = false
@@ -48,6 +49,9 @@ OptionParser.new do |opts|
   end
   opts.on("--check-delete", "Check if delete is possible first?") do |value|
     check_delete = value
+  end
+  opts.on("--parse-data-url", "Does the deserialized data have data URL fields that need to be parsed?") do |value|
+    parse_data_url= value
   end
   opts.on("--transform-method Method", "Optional custom transform method") do |value|
     transform_method = value
@@ -480,7 +484,12 @@ func (c *<%= controller %>) deserializeInstance(file io.Reader) (*model.<%= sing
     return nil, aphttp.NewError(errors.New("Could not deserialize <%= singular %> from JSON."),
       http.StatusBadRequest)
   }
+  <% if parse_data_url %>
+  err := parseDataURL(wrapped.<%= singular %>)
+  return wrapped.<%= singular %>, err
+  <% else %>
   return wrapped.<%= singular %>, nil
+  <% end %>
 }
 
 <% if transform %>

@@ -12,7 +12,7 @@ import (
 //go:generate ./controller.rb --model API --account --before-validate-hook --after-insert-hook --after-find-hook --after-update-hook --transform-method c.addBaseURL --transform-type enhancedAPI
 //go:generate ./controller.rb --model EndpointGroup --account --api
 //go:generate ./controller.rb --model Environment --account --api --check-delete
-//go:generate ./controller.rb --model Host --account --api
+//go:generate ./controller.rb --model Host --account --api --parse-data-url
 //go:generate ./controller.rb --model Library --account --api
 //go:generate ./controller.rb --model SharedComponent --account --api
 //go:generate ./controller.rb --model ProxyEndpoint --reflect
