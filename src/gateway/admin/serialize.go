@@ -2,6 +2,7 @@ package admin
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,6 +18,7 @@ import (
 	apsql "gateway/sql"
 
 	"github.com/gorilla/mux"
+	"github.com/vincent-petithory/dataurl"
 )
 
 func instanceID(r *http.Request) int64 {
@@ -162,4 +164,36 @@ func serialize(data interface{}, w http.ResponseWriter) aphttp.Error {
 // To be removed when SerializedValidationErrors are adopted everywhere
 type wrappedErrors struct {
 	Errors aperrors.Errors `json:"errors"`
+}
+
+func parseDataURL(m interface{}) aphttp.Error {
+	switch t := m.(type) {
+	case *model.Host:
+		host := m.(*model.Host)
+
+		// decode the key if it exists
+		if host.PrivateKeyContents() != "" {
+			d, err := dataurl.DecodeString(host.PrivateKeyContents())
+			if err != nil {
+				logreport.Printf("%s Error deserializing private key file data for %T", config.System, t)
+				return aphttp.NewError(errors.New("Error deserializing private key contents"), http.StatusBadRequest)
+			}
+			host.SetPrivateKeyContents(string(d.Data))
+		}
+
+		// decode the cert if it exists
+		if host.CertContents() != "" {
+			d, err := dataurl.DecodeString(host.CertContents())
+			if err != nil {
+				logreport.Printf("%s Error deserializing cert file data for %T", config.System, t)
+				return aphttp.NewError(errors.New("Error deserializing cert contents"), http.StatusBadRequest)
+			}
+			host.SetCertContents(string(d.Data))
+		}
+
+		return nil
+	default:
+		logreport.Printf("%s Error deserializing file data for %T", config.System, t)
+		return aphttp.DefaultServerError()
+	}
 }
