@@ -25,20 +25,21 @@ type Configuration struct {
 	Jobs          bool   `flag:"jobs" default:"true"`
 	UseTLS        bool   `flag:"use-tls" default:"false"`
 
-	Airbrake       Airbrake
-	Database       Database
-	Proxy          ProxyServer
-	Job            BackgroundJob
-	Admin          ProxyAdmin
-	Elastic        ElasticLogging
-	Bleve          BleveLogging
-	Soap           Soap
-	Store          Store
-	RemoteEndpoint RemoteEndpoint
-	SMTP           SMTP
-	Push           Push
-	Docker         Docker
-	Stats          Stats
+	Airbrake        Airbrake
+	Database        Database
+	Proxy           ProxyServer
+	Job             BackgroundJob
+	Admin           ProxyAdmin
+	Elastic         ElasticLogging
+	Bleve           BleveLogging
+	PostgresLogging PostgresLogging
+	Soap            Soap
+	Store           Store
+	RemoteEndpoint  RemoteEndpoint
+	SMTP            SMTP
+	Push            Push
+	Docker          Docker
+	Stats           Stats
 }
 
 // Airbrake specifies configuration for error reporting with Airbrake
@@ -224,6 +225,14 @@ type ElasticLogging struct {
 type BleveLogging struct {
 	File        string `flag:"bleve-logging-file" default:"logs.bleve"`
 	DeleteAfter int64  `flag:"bleve-logging-delete-after" default:"30"`
+}
+
+type PostgresLogging struct {
+	Enable           bool   `flag:"postgres-logging-enable" default:"false"`
+	Migrate          bool   `flag:"postgres-logging-migrate" default:"false"`
+	ConnectionString string `flag:"postgres-logging-conn-string" default:"dbname=gateway_logs sslmode=disable"`
+	MaxConnections   int64  `flag:"postgres-logging-max-connections" default:"50"`
+	DeleteAfter      int64  `flag:"postgres-logging-delete-after" default:"30"`
 }
 
 type SMTP struct {
