@@ -10,7 +10,8 @@ import (
 
 	aperrors "gateway/errors"
 
-	"github.com/sideshow/apns2/certificate"
+	"github.com/nanoscaleio/apns2/certificate"
+	"github.com/nanoscaleio/apns2/token"
 	"github.com/vincent-petithory/dataurl"
 )
 
@@ -23,6 +24,7 @@ const (
 
 	PushCertificateTypePKCS12 = "application/x-pkcs12"
 	PushCertificateTypeX509   = "application/x-x509-ca-cert"
+	PushKeyTypePKCS8          = "application/pkcs8"
 
 	GCMService = "https://gcm-http.googleapis.com/gcm/send"
 	FCMService = "https://fcm.googleapis.com/fcm/send"
@@ -36,17 +38,21 @@ type Push struct {
 }
 
 type PushPlatform struct {
-	Name           string `json:"name"`
-	Codename       string `json:"codename"`
-	Type           string `json:"type"`
-	Certificate    string `json:"certificate"`
-	Password       string `json:"password"`
-	Topic          string `json:"topic"`
-	Development    bool   `json:"development"`
-	APIKey         string `json:"api_key"`
-	ConnectTimeout int    `json:"connect_timeout"`
-	AckTimeout     int    `json:"ack_timeout"`
-	TimeoutRetries int    `json:"timeout_retries"`
+	Name                string `json:"name"`
+	Codename            string `json:"codename"`
+	Type                string `json:"type"`
+	Certificate         string `json:"certificate"`
+	Password            string `json:"password"`
+	Topic               string `json:"topic"`
+	Development         bool   `json:"development"`
+	APIKey              string `json:"api_key"`
+	ConnectTimeout      int    `json:"connect_timeout"`
+	AckTimeout          int    `json:"ack_timeout"`
+	TimeoutRetries      int    `json:"timeout_retries"`
+	TokenAuthentication bool   `json:"token_authentication"`
+	AuthenticationKey   string `json:"authentication_key"`
+	KeyID               string `json:"key_id"`
+	TeamID              string `json:"team_id"`
 }
 
 func (p *Push) UpdateWith(parent *Push) {
@@ -154,28 +160,53 @@ func (p *Push) Validate() aperrors.Errors {
 				errors.Add("topic", "must not be blank")
 				continue
 			}
-			dataURL, err := dataurl.DecodeString(p.PushPlatforms[i].Certificate)
-			if err != nil {
-				errors.Add("certificate", fmt.Sprintf("invalid data url: %v", err))
-				break
-			}
-			switch dataURL.MediaType.ContentType() {
-			case PushCertificateTypePKCS12:
-				cert, err := certificate.FromP12Bytes(dataURL.Data, p.PushPlatforms[i].Password)
+			if p.PushPlatforms[i].TokenAuthentication {
+				dataURL, err := dataurl.DecodeString(p.PushPlatforms[i].AuthenticationKey)
 				if err != nil {
-					errors.Add("certificate", fmt.Sprintf("invalid certificate: %v", err))
+					errors.Add("authentication_key", fmt.Sprintf("invalid data url: %v", err))
 					continue
 				}
-				validateCertificate(cert, errors)
-			case PushCertificateTypeX509:
-				cert, err := certificate.FromPemBytes(dataURL.Data, p.PushPlatforms[i].Password)
-				if err != nil {
-					errors.Add("certificate", fmt.Sprintf("invalid certificate: %v", err))
+				if dataURL.MediaType.ContentType() != PushKeyTypePKCS8 {
+					errors.Add("authentication_key", "invalid authentication key")
 					continue
 				}
-				validateCertificate(cert, errors)
-			default:
-				errors.Add("certificate", "must be pkcs12 or pem format")
+				_, err = token.AuthKeyFromBytes(dataURL.Data)
+				if err != nil {
+					errors.Add("authentication_key", fmt.Sprintf("invalid authentication key: %v", err))
+					continue
+				}
+				if p.PushPlatforms[i].KeyID == "" {
+					errors.Add("key_id", "must not be blank")
+					continue
+				}
+				if p.PushPlatforms[i].TeamID == "" {
+					errors.Add("team_id", "must not be blank")
+					continue
+				}
+			} else {
+				dataURL, err := dataurl.DecodeString(p.PushPlatforms[i].Certificate)
+				if err != nil {
+					errors.Add("certificate", fmt.Sprintf("invalid data url: %v", err))
+					break
+				}
+				switch dataURL.MediaType.ContentType() {
+				case PushCertificateTypePKCS12:
+					cert, err := certificate.FromP12Bytes(dataURL.Data, p.PushPlatforms[i].Password)
+					if err != nil {
+						errors.Add("certificate", fmt.Sprintf("invalid certificate: %v", err))
+						continue
+					}
+					validateCertificate(cert, errors)
+				case PushCertificateTypeX509:
+					cert, err := certificate.FromPemBytes(dataURL.Data, p.PushPlatforms[i].Password)
+					if err != nil {
+						errors.Add("certificate", fmt.Sprintf("invalid certificate: %v", err))
+						continue
+					}
+					validateCertificate(cert, errors)
+				default:
+					errors.Add("certificate", "must be pkcs12 or pem format")
+				}
 			}
 		case PushTypeGCM:
 			key := p.PushPlatforms[i].APIKey
