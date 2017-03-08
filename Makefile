@@ -295,7 +295,8 @@ vendor_get: vendor_clean
 	github.com/google/go-gcm \
 	github.com/edganiukov/fcm \
 	github.com/Microsoft/go-winio \
-	github.com/Azure/go-ansiterm
+	github.com/Azure/go-ansiterm \
+	github.com/fatih/pool
 
 vendor_update: vendor_get
 	rm -rf `find ./_vendor/src -type d -name .git` \

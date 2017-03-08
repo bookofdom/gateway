@@ -10,6 +10,7 @@ import (
 	"gateway/model"
 	"gateway/soap"
 	"gateway/sql"
+	"gopkg.in/fatih/pool.v2"
 	"io"
 	"net"
 	"strings"
@@ -46,6 +47,9 @@ type SoapResponse struct {
 	Body *json.RawMessage `json:"body"`
 }
 
+// Connection pool
+var cpool pool.Pool
+
 // NewSoapRequest constructs a new SoapRequest
 func NewSoapRequest(
 	endpoint *model.RemoteEndpoint,
@@ -80,6 +84,14 @@ func NewSoapRequest(
 	request.WsdlURL, err = soap.WsdlURLForSoapRemoteEndpointID(endpoint.Soap.ID)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to determine WSDL URL: %v", err)
+	}
+
+	hostPort := fmt.Sprintf("%s:%d", soapConf.SoapClientHost, soapConf.SoapClientPort)
+
+	f := func() (net.Conn, error) { return net.Dial("tcp", hostPort) }
+	cpool, err = pool.NewChannelPool(3, 10, f)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to create connection pool: %v", err)
 	}
 
 	return request, nil
@@ -176,13 +188,13 @@ func (soapRequest *SoapRequest) Perform() Response {
 		return NewErrorResponse(aperrors.NewWrapped("[soap] Unmarshaling request data", err))
 	}
 
-	hostPort := fmt.Sprintf("%s:%d", soapRequest.soapConf.SoapClientHost, soapRequest.soapConf.SoapClientPort)
-	conn, err := net.Dial("tcp", hostPort)
+	// Get a connection from the pool
+	conn, err := cpool.Get()
+	defer conn.Close()
+
 	if err != nil {
 		return NewErrorResponse(aperrors.NewWrapped("[soap] Connecting to soapclient", err))
 	}
-
-	defer conn.Close()
 
 	message := fmt.Sprintf("%s\n\n", string(requestBytes))
 	_, err = conn.Write([]byte(message))

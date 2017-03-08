@@ -58,12 +58,14 @@ type Database struct {
 
 // Soap specifies configuration options pertaining to remote SOAP endpoints
 type Soap struct {
-	JdkPath        string `flag:"soap-jdk-path"    default:""`
-	SoapClientHost string `flag:"soap-client-host" default:"localhost"`
-	SoapClientPort int64  `flag:"soap-client-port" default:"19083"`
-	ThreadPoolSize int64  `flag:"soap-thread-pool-size" default:"0"`
-	JavaOpts       string `flag:"soap-java-opts" default:""`
-	ClientJar      string `flag:"soap-client-jar"        default:"gateway-soap-client.jar"`
+	JdkPath             string `flag:"soap-jdk-path"    default:""`
+	SoapClientHost      string `flag:"soap-client-host" default:"localhost"`
+	SoapClientPort      int64  `flag:"soap-client-port" default:"19083"`
+	ThreadPoolSize      int64  `flag:"soap-thread-pool-size" default:"0"`
+	JavaOpts            string `flag:"soap-java-opts" default:""`
+	ClientJar           string `flag:"soap-client-jar"        default:"gateway-soap-client.jar"`
+	MaxConnPoolSize     int64  `flag:"max-conn-pool-size" default:"10"`
+	InitialConnPoolSize int64  `flag:"initial-conn-pool-size" default:"10"`
 }
 
 // Store specifies configuration options for store remote endpoints
