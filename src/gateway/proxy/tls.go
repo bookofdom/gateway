@@ -243,6 +243,12 @@ func (r *tlsRedirectRouter) redirect(host string, w http.ResponseWriter, req *ht
 	req.URL.Scheme = "https"
 	req.URL.Host = fmt.Sprintf("%s:%d", host, r.conf.Proxy.TLSPort)
 
+	// Send a 307 in dev mode so browsers do not cache the redirect for all eternity.
+	if r.conf.DevMode() {
+		http.Redirect(w, req, req.URL.String(), 307)
+		return
+	}
+
 	// use a 301 so the client can cache the redirect
 	http.Redirect(w, req, req.URL.String(), 301)
 }
