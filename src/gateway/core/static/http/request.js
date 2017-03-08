@@ -1442,3 +1442,104 @@ AP.CustomFunction.Request.prototype.command = function() {
 AP.CustomFunction.Request.prototype.call = function(name, input) {
   this.command("call", name, input);
 }
+
+/**
+ *  The following objects are stubs that are updated by the VM.
+ *  They supply the UI with autocomplete info.
+ */
+
+/**
+ * Encoding contains helper functions to encode and decode data.
+ *
+ * @namespace
+ */
+AP.Encoding = AP.Encoding || {};
+
+/**
+ * Encodes supplied string to base64.
+ *
+ * @param {string} data - A string to be encoded
+ *
+ * @return {string} Base64 string
+ */
+AP.Encoding.toBase64 = function(data) {};
+
+
+/**
+ * Decodes supplied base64 string to utf8.
+ *
+ * @param {string} data - A string to be decoded
+ *
+ * @return {string} UTF8 string
+ */
+AP.Encoding.fromBase64 = function(data) {};
+
+/**
+ * Encodes supplied string to hex. 
+ *
+ * @param {string} data - A string to be encoded
+ * 
+ * @return {string} Hex string
+ */
+AP.Encoding.toHex = function(data) {};
+
+/**
+ * Decodes supplied hex string to utf8.
+ *
+ * @param {string} data - A string to be decoded 
+ *
+ * @return {string} UTF8 string
+ */
+AP.Encoding.fromHex = function(data) {};
+
+/**
+ * Crypto contains helper functions to encrypt and decrypt data.
+ *
+ * @namespace
+ */
+AP.Crypto = AP.Crypto || {};
+
+/**
+ * Aes contains helper functions for dealing with AES.
+ * 
+ * @namespace
+ */
+AP.Crypto.Aes = AP.Crypto.Aes || {};
+
+/**
+ * Encrypt encrypts data with the supplied options.
+ *
+ * @param {string} data - The data to encrypt
+ * @param {Object} options - Parameters for encryption
+ * @param {string} options.key - The name of the key to use
+ * @param {string} options.iv - Optional. A string to use as IV. Default is random.
+ * @param {string} options.mode - Optional. CBC or CFB encryption mode. Default is CFB.
+ *
+ * @return {string} Base64 encoded encrypted string
+ */
+AP.Crypto.Aes.encrypt = function(data, options) {};
+
+/**
+ * Decrypt decrypts data with the supplied options.
+ *
+ * @param {string} data - The base64 encoded data to be decrypted
+ * @param {Object} options - Parameters for decryption
+ * @param {string} options.key - The name of the key to use
+ * @param {string} options.iv - Optional. A string to use as IV. Default is random.
+ * @param {string} options.mode - Optional. CBC or CFB encryption mode. Default is CFB.
+ *
+ * @return {string} UTF8 unencrypted string
+ */
+AP.Crypto.Aes.decrypt = function(data, options) {};
+
+
+/**
+ * Encrypt encrypts the data with the supplied options using RSA-OAEP. 
+ *
+ * @param {string} data - The data to be encrypted
+ * @param {Object} options - Parameters for encryption
+ * @param {string} options.key - The name of the key to use
+ * @param {string} options.algorithm - Optional. The name of the hashing algorithm to use. Defaults to SHA256.
+ * @param {string} options.tag - Optional. Arbitrary data that will not be encrypted but gives context to the message. Default is empty.
+ */
+AP.Crypto.encrypt = function(data, options) {};
