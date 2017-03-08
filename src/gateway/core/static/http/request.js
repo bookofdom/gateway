@@ -1500,6 +1500,30 @@ AP.Encoding.fromHex = function(data) {};
 AP.Crypto = AP.Crypto || {};
 
 /**
+ * PaddingSchemes contains supported encryption padding schemes
+ */
+AP.Crypto.PaddingSchemes = {
+    pkcs:   "pkcs1v15",
+    pss:        "pss",
+}
+
+/**
+ * HashingAlgorithms contains supported hashing algorithms
+ */
+AP.Crypto.HashingAlgorithms = {
+    md5:        "md5",
+    sha1:       "sha1",
+    sha256:     "sha256",
+    sha512:     "sha512",
+    sha384:     "sha384",
+    sha512_256: "sha512_256",
+    sha3_224:   "sha3_224",
+    sha3_256:   "sha3_256",
+    sha3_384:   "sha3_384",
+    sha3_512:   "sha3_512",
+}
+
+/**
  * Aes contains helper functions for dealing with AES.
  * 
  * @namespace
