@@ -285,7 +285,7 @@ vendor_get: vendor_clean
 	github.com/SAP/go-hdb/driver \
 	golang.org/x/net/http2 \
 	golang.org/x/crypto/pkcs12 \
-	github.com/sideshow/apns2 \
+	github.com/nanoscaleio/apns2 \
 	github.com/garyburd/redigo \
 	github.com/fsouza/go-dockerclient \
 	github.com/nanoscaleio/surgemq \
