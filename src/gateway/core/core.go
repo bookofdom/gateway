@@ -249,7 +249,6 @@ var shared = func() *otto.Otto {
 	var files = []string{
 		"gateway.js",
 		"sessions.js",
-		"crypto.js",
 		"call.js",
 		"http/request.js",
 		"http/response.js",

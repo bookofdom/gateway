@@ -1533,26 +1533,26 @@ AP.Crypto.Aes = AP.Crypto.Aes || {};
 /**
  * Encrypt encrypts data with the supplied options.
  *
- * @param {string} data - The data to encrypt
- * @param {Object} options - Parameters for encryption
- * @param {string} options.key - The name of the key to use
+ * @param {string} data - The data to encrypt.
+ * @param {Object} options - Parameters for encryption.
+ * @param {string} options.key - The name of the key to use.
  * @param {string} options.iv - Optional. A string to use as IV. Default is random.
  * @param {string} options.mode - Optional. CBC or CFB encryption mode. Default is CFB.
  *
- * @return {string} Base64 encoded encrypted string
+ * @return {string} Base64 encoded encrypted string.
  */
 AP.Crypto.Aes.encrypt = function(data, options) {};
 
 /**
  * Decrypt decrypts data with the supplied options.
  *
- * @param {string} data - The base64 encoded data to be decrypted
- * @param {Object} options - Parameters for decryption
- * @param {string} options.key - The name of the key to use
+ * @param {string} data - The base64 encoded data to be decrypted.
+ * @param {Object} options - Parameters for decryption.
+ * @param {string} options.key - The name of the key to use.
  * @param {string} options.iv - Optional. A string to use as IV. Default is random.
  * @param {string} options.mode - Optional. CBC or CFB encryption mode. Default is CFB.
  *
- * @return {string} UTF8 unencrypted string
+ * @return {string} UTF8 unencrypted string.
  */
 AP.Crypto.Aes.decrypt = function(data, options) {};
 
@@ -1560,10 +1560,155 @@ AP.Crypto.Aes.decrypt = function(data, options) {};
 /**
  * Encrypt encrypts the data with the supplied options using RSA-OAEP. 
  *
- * @param {string} data - The data to be encrypted
- * @param {Object} options - Parameters for encryption
- * @param {string} options.key - The name of the key to use
+ * @param {string} data - The data to be encrypted.
+ * @param {Object} options - Parameters for encryption.
+ * @param {string} options.key - The name of the key to use.
  * @param {string} options.algorithm - Optional. The name of the hashing algorithm to use. Defaults to SHA256.
  * @param {string} options.tag - Optional. Arbitrary data that will not be encrypted but gives context to the message. Default is empty.
  */
 AP.Crypto.encrypt = function(data, options) {};
+
+/**
+ * hashPassword uses bcrypt to hash a password.
+ *
+ * @param {string} password - The password to hash.
+ * @param {Number} iterations - The number of times to hash the password. Also known as "cost". Recommended 8 to 10.
+ *
+ * @return {string} Base64 encoded string.
+ */
+AP.Crypto.hashPassword = function(password, iterations) {};
+
+/**
+ * compareHashAndPassword uses bcrypt to compare the supplied hash and password.
+ *
+ * @param {string} hash - Base64 encoded hash.
+ * @param {string} password - Password to compare the hash against.
+ *
+ * @return {Boolean} True if the hash and password match. May also return undefined if an error occurred.
+ */
+AP.Crypto.compareHashAndPassword = function(hash, password) {};
+
+/**
+ * hash returns the result of hashing the supplied data with the supplied alogorithm.
+ *
+ * @param {string} data - To be hashed.
+ * @param {string} algorithm - Name of the algorithm to use. See AP.Crypto.HashingAlgorithms for supported algorithms.
+ *
+ * @return {string} Base64 encoded hash result.
+ */
+AP.Crypto.hash = function(data, algorithm) {};
+
+
+/**
+ * hashHmac returns the result of hashing the supplied data with the supplied algorithm using HMAC.
+ *
+ * @param {string} data - To be hashed.
+ * @param {string} tag - The tag is used as the HMAC key.
+ * @param {string} algorithm - Name of the algorithm to use. See AP.Crypto.HashingAlgorithms for supported algorithms.
+ */
+AP.Crypto.hashHmac = function(data, tag, algorithm) {};
+
+/**
+ * rand returns a number of cryptographically secure random bytes encoded in base64.
+ *
+ * @param {Number} length - Number of bytes to generate. Max is 4096.
+ *
+ * @return {string} Base64 encoded bytes.
+ */
+AP.Crypto.rand = function(length) {};
+
+/**
+ * sign signs the data with the supplied options.
+ *
+ * @param {string} data - To be signed.
+ * @param {Object} options - Parameters for signing.
+ * @param {string} options.key - The name of the key to use.
+ * @param {string} options.algorithm - Optional. The name of the hashing algorithm to use. Defaults to SHA256.
+ * @param {string} options.padding - Optional. The padding scheme to use. Defaults to PKCS1v15.
+ *
+ * @return {Object} Signature object.
+ */
+AP.Crypto.sign = function(data, options) {};
+
+/**
+ * verify verifies the signature against the supplied data.
+ *
+ * @param {string} data - To be verified.
+ * @param {string} signature - Base64 encoded signature.
+ * @param {Object} options - Parameters for verifying.
+ * @param {string} options.key - The name of the key to use.
+ * @param {string} options.algorithm - Optional. The name of the hashing algorithm to use. Defaults to SHA256.
+ * @param {string} options.padding - Optional. The padding scheme to use. Defaults to PKCS1v15.
+ *
+ * @return {Boolean} True if signature is correct.
+ */
+AP.Crypto.verify = function(data, signature, options) {};
+
+/**
+ * Conversion contains helper functions for converting JSON and XML data formats.
+ *
+ * @namespace
+ */
+AP.Conversion = AP.Conversion || {};
+
+/**
+ * toJson converts the XML string to a JSON object.
+ *
+ * @param {string} data - XML string to convert.
+ *
+ * @return {string} JSON string.
+ */
+AP.Conversion.toJson = function(data) {};
+
+/**
+ * toXML converts an object to an XML string.
+ *
+ * @param {Object} data - An object to convert.
+ *
+ * @return {string} XML string.
+ */
+AP.Conversion.toXML = function(data) {};
+
+/**
+ * JSONPath traverses a JSON object and returns the value(s) found for the path.
+ *
+ * @param {Object} data - The object to search.
+ * @param {string} path - The path to search on.
+ * @param {string[]} subkeys - Subkeys are "key:value[:type]" entries that must match for the path node.
+ * 	They can be wildcarded "key:*" to require the key exists with _some_ value. They can also be preceeded
+ * 	With the '!' character to exclude a match, e.g. "!author:Frank Herbert".
+ *
+ */
+AP.Conversion.JSONPath = function(data, path, subkeys) {};
+
+/**
+ * XMLPath traverses an XML string and returns the value(s) found for the path.
+ *
+ * @param {Object} data - XML string to search.
+ * @param {string} path - The path to search on.
+ * @param {string[]} subkeys - Subkeys are "key:value[:type]" entries that must match for the path node.
+ * 	They can be wildcarded "key:*" to require the key exists with _some_ value. They can also be preceeded
+ * 	With the '!' character to exclude a match, e.g. "!author:Frank Herbert".
+ */
+AP.Conversion.XMLPath = function(data, path, subkeys) {};
+
+/**
+ * @typedef configuration
+ * @type {Object}
+ * @property {string} codename - Remote endpoint codename.
+ * @property {Object[]} requests - Array of request objects to be executed using the endpoint configuration matching the supplied codename.
+ */
+
+/**
+ * Perform executes the supplied endpoint configuration or array of endpoint configurations and returns their
+ * results.
+ *
+ * @param {configuration[]} config - An endpoint configuration or array of configurations.
+ * @param {string} config.codename - Remote endpoint codename.
+ * @param {Object[]} config.requests - Array of request objects to be executed using the endpoint configuration matching the supplied codename.
+ *
+ * @example AP.Perform([{codename: "foo", requests: [requestOne, requestTwo]}]);
+ *
+ * @return {Object} Map of codename:results[].
+ */
+AP.Perform = function(config) {};
