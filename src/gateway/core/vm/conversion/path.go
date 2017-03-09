@@ -75,8 +75,8 @@ func getPath(vm *otto.Otto, call otto.FunctionCall, fn pather) (otto.Value, erro
 		subkeys = make([]string, 0)
 	} else {
 		export, _ := s.Export()
-		if e, ok := export.([]interface{}); ok {
-			subkeys = convertToStringSlice(e)
+		if e, ok := export.([]string); ok {
+			subkeys = e
 		} else {
 			return undefined, errors.New("subkeys should be an array of strings")
 		}
