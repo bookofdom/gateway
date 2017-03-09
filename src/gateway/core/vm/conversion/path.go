@@ -84,7 +84,7 @@ func getPath(vm *otto.Otto, call otto.FunctionCall, fn pather) (otto.Value, erro
 
 	result, err := fn(data, path, subkeys)
 	if err != nil {
-		return undefined, fmt.Errorf("failed to convert: %s", err)
+		return undefined, fmt.Errorf("path failed: %s", err)
 	}
 
 	val, err := vm.ToValue(result)
@@ -116,6 +116,10 @@ func XMLPath(data interface{}, path string, subkeys []string) ([]interface{}, er
 }
 
 func JSONPath(data interface{}, path string, subkeys []string) ([]interface{}, error) {
-	m := mxj.Map(data.(map[string]interface{}))
+	dataMap, ok := data.(map[string]interface{})
+	if !ok {
+		return nil, errors.New("invalid data type, expected object")
+	}
+	m := mxj.Map(dataMap)
 	return m.ValuesForPath(path, subkeys[:]...)
 }
