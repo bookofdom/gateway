@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"gateway/config"
 	"gateway/docker"
 	aperrors "gateway/errors"
 	"gateway/model"
+	apsql "gateway/sql"
 )
 
 // DockerRequest is a request to a Docker container
@@ -22,6 +24,7 @@ type DockerRequest struct {
 	Registry    string            `json:"registry,omitempty"`
 	Memory      int64             `json:"-"`
 	CPUShares   int64             `json:"-"`
+	db          *apsql.DB
 }
 
 // DockerResponse is a response from a Docker container
@@ -45,7 +48,7 @@ func (dr *DockerResponse) Log() string {
 }
 
 // NewDockerRequest creates a new Docker request
-func NewDockerRequest(endpoint *model.RemoteEndpoint, data *json.RawMessage, dockerConf config.Docker) (*DockerRequest, error) {
+func NewDockerRequest(endpoint *model.RemoteEndpoint, data *json.RawMessage, dockerConf config.Docker, db *apsql.DB) (*DockerRequest, error) {
 	request := new(DockerRequest)
 
 	if err := json.Unmarshal(*data, request); err != nil {
@@ -66,6 +69,7 @@ func NewDockerRequest(endpoint *model.RemoteEndpoint, data *json.RawMessage, doc
 	}
 	request.Memory = dockerConf.Memory
 	request.CPUShares = dockerConf.CPUShares
+	request.db = db
 	return request, nil
 }
 
@@ -110,7 +114,7 @@ func (dr *DockerRequest) Perform() Response {
 		return NewErrorResponse(errors.New("blank or nil commands are invalid"))
 	}
 	dc := &docker.DockerConfig{Repository: dr.Repository, Tag: dr.Tag, Username: dr.Username, Password: dr.Password, Registry: dr.Registry, Memory: dr.Memory, CPUShares: dr.CPUShares}
-	runOutput, err := dc.Execute(dr.Command, dr.Arguments, dr.Environment)
+	runOutput, err := dc.Execute(dr.Command, dr.Arguments, dr.Environment, dr.db)
 	if err != nil {
 		return NewErrorResponse(aperrors.NewWrapped("[docker] Error executing command in docker conatiner", err))
 	}

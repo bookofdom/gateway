@@ -226,5 +226,5 @@ func ExecuteCustomFunction(db *apsql.DB, accountID, apiID, customFunctionID int6
 	}
 
 	return docker.ExecuteImage(function.ImageName(), function.Memory,
-		function.CPUShares, function.Timeout, input)
+		function.CPUShares, function.Timeout, input, db)
 }

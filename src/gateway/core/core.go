@@ -212,7 +212,7 @@ func (s *Core) PrepareRequest(
 		if generic.Type != DockerRequest {
 			return nil, invalidTypeErrorMessage(DockerRequest, generic.Type)
 		}
-		return request.NewDockerRequest(endpoint, data, s.DockerConf)
+		return request.NewDockerRequest(endpoint, data, s.DockerConf, s.OwnDb)
 	case model.RemoteEndpointTypeJob:
 		if generic.Type != JobRequest {
 			return nil, invalidTypeErrorMessage(JobRequest, generic.Type)

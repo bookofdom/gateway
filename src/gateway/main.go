@@ -209,6 +209,8 @@ func main() {
 		}
 	}
 
+	service.DockerImageDeletionService(conf, db)
+
 	// Configure SOAP
 	if conf.RemoteEndpoint.SoapEnabled {
 		logreport.Printf("Configuring SOAP remote endpoint support...")

@@ -86,6 +86,7 @@ type Docker struct {
 	TlsCertContent   string `flag:"docker-tls-cert-content" default:""`
 	TlsCaCertContent string `flag:"docker-tls-cacert-content" default:""`
 	TlsKeyContent    string `flag:"docker-tls-key-content" default:""`
+	ImageIdleTimeout int64  `flag:"docker-image-idle-timeout" default:"1"`
 }
 
 // Stats database configuration.

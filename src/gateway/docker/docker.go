@@ -13,6 +13,7 @@ import (
 
 	"gateway/config"
 	"gateway/logreport"
+	apsql "gateway/sql"
 
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
@@ -102,6 +103,14 @@ func Available() bool {
 	return client != nil
 }
 
+func DockerClientID() (string, error) {
+	info, err := client.Info()
+	if err != nil {
+		return "", err
+	}
+	return info.ID, nil
+}
+
 func BuildImage(options dockerclient.BuildImageOptions) error {
 	return client.BuildImage(options)
 }
@@ -110,8 +119,36 @@ func InspectImage(name string) (*dockerclient.Image, error) {
 	return client.InspectImage(name)
 }
 
-func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface{}) (*RunOutput, error) {
+func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface{}, db *apsql.DB) (output *RunOutput, err error) {
 	var stdout, stderr, containerLogs bytes.Buffer
+
+	clientID, err := DockerClientID()
+	if err != nil {
+		return nil, err
+	}
+	image := DockerImage{
+		ClientID: clientID,
+		Name:     name,
+	}
+	img, err := image.Find(db)
+	if err != nil {
+		err = db.DoInTransaction(func(tx *apsql.Tx) error {
+			err := image.Insert(tx)
+			if err != nil {
+				return err
+			}
+			img = &image
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	defer func() {
+		err = db.DoInTransaction(func(tx *apsql.Tx) error {
+			return img.Update(tx)
+		})
+	}()
 
 	container, err := client.CreateContainer(dockerclient.CreateContainerOptions{
 		Config: &dockerclient.Config{
@@ -192,6 +229,13 @@ func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface
 	return &RunOutput{Stdout: stdout.String(), Stderr: stderr.String(), Logs: containerLogs.String(), StatusCode: code, Error: dockerErr}, nil
 }
 
+func DeleteImage(name string) error {
+	options := dockerclient.RemoveImageOptions{
+		Force: true,
+	}
+	return client.RemoveImageExtended(name, options)
+}
+
 // Pull pulls the image from the repository
 func (dc *DockerConfig) PullOrRefresh() error {
 	var perr error
@@ -260,7 +304,7 @@ func (dc *DockerConfig) ImageExists() (bool, error) {
 	return true, nil
 }
 
-func (dc *DockerConfig) Execute(command string, arguments []string, environmentVars map[string]string) (*RunOutput, error) {
+func (dc *DockerConfig) Execute(command string, arguments []string, environmentVars map[string]string, db *apsql.DB) (output *RunOutput, err error) {
 	var environment []string
 	for k, v := range environmentVars {
 		environment = append(environment, fmt.Sprintf("%s=%s", k, v))
@@ -282,6 +326,34 @@ func (dc *DockerConfig) Execute(command string, arguments []string, environmentV
 	}
 
 	var stdout, stderr, containerLogs bytes.Buffer
+
+	clientID, err := DockerClientID()
+	if err != nil {
+		return nil, err
+	}
+	image := DockerImage{
+		ClientID: clientID,
+		Name:     dc.Image(),
+	}
+	img, err := image.Find(db)
+	if err != nil {
+		err = db.DoInTransaction(func(tx *apsql.Tx) error {
+			err := image.Insert(tx)
+			if err != nil {
+				return err
+			}
+			img = &image
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	defer func() {
+		err = db.DoInTransaction(func(tx *apsql.Tx) error {
+			return img.Update(tx)
+		})
+	}()
 
 	container, err := client.CreateContainer(dockerclient.CreateContainerOptions{
 		Config: &dockerclient.Config{
