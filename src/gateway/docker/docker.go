@@ -186,7 +186,11 @@ func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface
 
 	var stdin = strings.NewReader(string(data))
 
+	waitAttached := make(chan bool, 1)
 	go func() {
+		defer func() {
+			waitAttached <- true
+		}()
 		if er := client.AttachToContainer(dockerclient.AttachToContainerOptions{
 			Container:    container.ID,
 			Stream:       true,
@@ -197,7 +201,7 @@ func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface
 			OutputStream: &stdout,
 			ErrorStream:  &stderr,
 		}); er != nil {
-			logreport.Printf("%s Could not attach to container %s: %s", config.System, container.ID, err.Error())
+			logreport.Printf("%s Could not attach to container %s: %s", config.System, container.ID, er.Error())
 		}
 	}()
 
@@ -208,6 +212,7 @@ func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface
 		client.StopContainer(container.ID, 0)
 		return nil, err
 	}
+	<-waitAttached
 
 	err = client.Logs(dockerclient.LogsOptions{
 		Container:    container.ID,
@@ -226,7 +231,13 @@ func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface
 		dockerErr = true
 	}
 
-	return &RunOutput{Stdout: stdout.String(), Stderr: stderr.String(), Logs: containerLogs.String(), StatusCode: code, Error: dockerErr}, nil
+	return &RunOutput{
+		Stdout:     stdout.String(),
+		Stderr:     stderr.String(),
+		Logs:       containerLogs.String(),
+		StatusCode: code,
+		Error:      dockerErr,
+	}, nil
 }
 
 func DeleteImage(name string) error {
@@ -387,8 +398,12 @@ func (dc *DockerConfig) Execute(command string, arguments []string, environmentV
 
 	var stdin = strings.NewReader(strings.Join(append([]string{command}, arguments...), " "))
 
+	waitAttached := make(chan bool, 1)
 	go func() {
-		if err = client.AttachToContainer(dockerclient.AttachToContainerOptions{
+		defer func() {
+			waitAttached <- true
+		}()
+		if er := client.AttachToContainer(dockerclient.AttachToContainerOptions{
 			Container:    container.ID,
 			Stream:       true,
 			Stdin:        true,
@@ -397,8 +412,8 @@ func (dc *DockerConfig) Execute(command string, arguments []string, environmentV
 			InputStream:  stdin,
 			OutputStream: &stdout,
 			ErrorStream:  &stderr,
-		}); err != nil {
-			logreport.Printf("%s Could not attach to container %s: %s", config.System, container.ID, err.Error())
+		}); er != nil {
+			logreport.Printf("%s Could not attach to container %s: %s", config.System, container.ID, er.Error())
 		}
 	}()
 
@@ -406,6 +421,7 @@ func (dc *DockerConfig) Execute(command string, arguments []string, environmentV
 	if err != nil {
 		return nil, err
 	}
+	<-waitAttached
 
 	err = client.Logs(dockerclient.LogsOptions{
 		Container:    container.ID,
@@ -424,5 +440,11 @@ func (dc *DockerConfig) Execute(command string, arguments []string, environmentV
 		dockerErr = true
 	}
 
-	return &RunOutput{Stdout: stdout.String(), Stderr: stderr.String(), Logs: containerLogs.String(), StatusCode: code, Error: dockerErr}, nil
+	return &RunOutput{
+		Stdout:     stdout.String(),
+		Stderr:     stderr.String(),
+		Logs:       containerLogs.String(),
+		StatusCode: code,
+		Error:      dockerErr,
+	}, nil
 }
