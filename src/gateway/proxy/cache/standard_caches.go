@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-// StandardCaches is the default in-memory cache backed by the database.
+// StandardCaches is the default LRU cache that is injected with a ModelDataSource and an upper bound for the cache size.
 type StandardCaches struct {
 	endpoints, libraries, plans, hosts DataSourceCache
 	planAccountIDs                     map[int64][]int64 //plan ID -> []AccountID
