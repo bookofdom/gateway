@@ -95,12 +95,6 @@ func (e *endpointCache) Get(criteria CacheCriteria) (interface{}, error) {
 	return val, nil
 }
 
-func (e *endpointCache) Remove(criteria CacheCriteria) bool {
-	e.Lock()
-	defer e.Unlock()
-	return e.cache.Remove(criteria)
-}
-
 type libraryCache struct {
 	baseCache
 }
@@ -131,12 +125,6 @@ func (l *libraryCache) Get(criteria CacheCriteria) (interface{}, error) {
 
 	l.cache.Add(apiid, val)
 	return val, nil
-}
-
-func (l *libraryCache) Remove(criteria CacheCriteria) bool {
-	l.Lock()
-	defer l.Unlock()
-	return l.cache.Remove(criteria)
 }
 
 type planCache struct {
@@ -172,12 +160,6 @@ func (p *planCache) Get(criteria CacheCriteria) (interface{}, error) {
 
 }
 
-func (p *planCache) Remove(criteria CacheCriteria) bool {
-	p.Lock()
-	defer p.Unlock()
-	return p.cache.Remove(criteria)
-}
-
 type hostCache struct {
 	baseCache
 }
@@ -208,10 +190,4 @@ func (h *hostCache) Get(criteria CacheCriteria) (interface{}, error) {
 
 	h.cache.Add(hostname, val)
 	return val, nil
-}
-
-func (h *hostCache) Remove(criteria CacheCriteria) bool {
-	h.Lock()
-	defer h.Unlock()
-	return h.cache.Remove(criteria)
 }
