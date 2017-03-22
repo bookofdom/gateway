@@ -18,13 +18,13 @@ import (
 	"gateway/logreport"
 	"gateway/model"
 	apvm "gateway/proxy/vm"
+	apsql "gateway/sql"
 	sql "gateway/sql"
 	"gateway/stats"
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	stripe "github.com/stripe/stripe-go"
-	"github.com/y0ssar1an/q"
 )
 
 // Server encapsulates the proxy server.
@@ -43,10 +43,11 @@ type Server struct {
 func NewServer(conf config.Configuration, ownDb *sql.DB, warp *core.Core) *Server {
 	var source Caches
 	if conf.Proxy.CacheAPIs {
-		q.Q("starting with caching enabled")
 		source = newCaches(asModelDataSource(ownDb), 100)
+		if listener, ok := source.(apsql.Listener); ok {
+			ownDb.RegisterListener(listener)
+		}
 	} else {
-		q.Q("starting with caching disable")
 		source = asModelDataSource(ownDb)
 	}
 
