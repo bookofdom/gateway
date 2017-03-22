@@ -43,7 +43,7 @@ type Server struct {
 func NewServer(conf config.Configuration, ownDb *sql.DB, warp *core.Core) *Server {
 	var source Caches
 	if conf.Proxy.CacheAPIs {
-		source = newCaches(asModelDataSource(ownDb), 100)
+		source = newCaches(asModelDataSource(ownDb), conf.Proxy.CacheSize)
 		if listener, ok := source.(apsql.Listener); ok {
 			ownDb.RegisterListener(listener)
 		}

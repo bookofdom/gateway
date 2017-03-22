@@ -70,6 +70,7 @@ var usageStrings = map[string]string{
 	"proxy-enable-os-env":     "Whether or not to expose the OS's ENV to proxy code.",
 
 	"proxy-cache-apis": "Whether or not to cache API data when serving proxy calls",
+	"proxy-cache-size": "Number of entries to maintain in-memory for each cache. Default is 0 which is unlimited.",
 
 	"proxy-http-timeout":     "The timeout in seconds to use for proxied HTTP requests.",
 	"proxy-code-timeout":     "The timeout in seconds to use for proxy script code.",

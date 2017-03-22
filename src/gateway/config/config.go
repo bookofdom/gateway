@@ -107,6 +107,7 @@ type ProxyServer struct {
 	EnableOSEnv     bool   `flag:"proxy-enable-os-env" default:"false"`
 
 	CacheAPIs bool `flag:"proxy-cache-apis" default:"false"`
+	CacheSize int  `flag:"proxy-cache-size" default:"0"`
 
 	HTTPTimeout   int64 `flag:"proxy-http-timeout" default:"60"`
 	CodeTimeout   int64 `flag:"proxy-code-timeout" default:"5"`
