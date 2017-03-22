@@ -20,6 +20,7 @@ type DataSourceCache interface {
 	Get(CacheCriteria) (interface{}, error)
 	Remove(CacheCriteria) bool
 	Contains(CacheCriteria) bool
+	Purge()
 }
 
 // ModelDataSource adds functions for retrieving specific models for the cache, specifically these
@@ -53,6 +54,12 @@ func (b *baseCache) Remove(criteria CacheCriteria) bool {
 	b.Lock()
 	defer b.Unlock()
 	return b.cache.Remove(criteria)
+}
+
+func (b *baseCache) Purge() {
+	b.Lock()
+	defer b.Unlock()
+	b.cache.Purge()
 }
 
 type endpointCache struct {

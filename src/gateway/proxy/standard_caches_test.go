@@ -88,6 +88,62 @@ func (s *CacheSuite) TestAccountNotification(c *gc.C) {
 	c.Assert(len(stdCaches.planAccountIDs[criteria]), gc.Equals, 2)
 }
 
+func (s *CacheSuite) TestReconnect(c *gc.C) {
+	apiid := int64(1)
+	endpointids := []int64{1, 2, 3}
+	hostnames := []string{"foo", "bar", "baz"}
+
+	caches := newCaches(&dataSourceMock{}, 10)
+	stdCaches := caches.(*StandardCaches)
+	libCache := stdCaches.libraries.(*libraryCache)
+	endpointCache := stdCaches.endpoints.(*endpointCache)
+	hostCache := stdCaches.hosts.(*hostCache)
+
+	// Fill up the caches
+	libraries, err := caches.Libraries(apiid)
+	c.Assert(err, jc.ErrorIsNil)
+	c.Assert(libraries, gc.NotNil)
+
+	for _, v := range endpointids {
+		val, err := caches.Endpoint(v)
+		c.Assert(err, jc.ErrorIsNil)
+		c.Assert(val, gc.NotNil)
+	}
+
+	for _, hostname := range hostnames {
+		val, err := caches.Host(hostname)
+		c.Assert(err, jc.ErrorIsNil)
+		c.Assert(val, gc.NotNil)
+	}
+
+	// apiEndpointIDs map should be updated with the endpoint previously retrieved from the cache
+	c.Assert(len(stdCaches.apiEndpointIDs), gc.Equals, 1)
+	c.Assert(len(stdCaches.apiEndpointIDs[apiid]), gc.Equals, len(endpointids))
+
+	// apiHostnames map should be updated with retrieved cache values
+	c.Assert(len(stdCaches.apiHostnames), gc.Equals, 1)
+	c.Assert(len(stdCaches.apiHostnames[apiid]), gc.Equals, len(hostnames))
+
+	// Ensure caches are correct
+	c.Assert(libCache.cache.Len(), gc.Equals, 1)
+	c.Assert(endpointCache.cache.Len(), gc.Equals, len(endpointids))
+	c.Assert(hostCache.cache.Len(), gc.Equals, len(hostnames))
+
+	stdCaches.Reconnect()
+
+	// Ensure caches are empty
+	c.Assert(libCache.cache.Len(), gc.Equals, 0)
+	c.Assert(endpointCache.cache.Len(), gc.Equals, 0)
+	c.Assert(hostCache.cache.Len(), gc.Equals, 0)
+
+	// Ensure maps are updated
+	c.Assert(len(stdCaches.apiEndpointIDs), gc.Equals, 0)
+	c.Assert(stdCaches.apiEndpointIDs[apiid], gc.IsNil)
+	c.Assert(len(stdCaches.apiHostnames), gc.Equals, 0)
+	c.Assert(len(stdCaches.apiHostnames), gc.Equals, 0)
+
+}
+
 func (s *CacheSuite) TestAPINotification(c *gc.C) {
 	apiid := int64(1)
 	endpointids := []int64{1, 2, 3}

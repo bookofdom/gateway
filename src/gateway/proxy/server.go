@@ -24,6 +24,7 @@ import (
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	stripe "github.com/stripe/stripe-go"
+	"github.com/y0ssar1an/q"
 )
 
 // Server encapsulates the proxy server.
@@ -35,16 +36,18 @@ type Server struct {
 	conf        config.Configuration
 	router      *mux.Router
 	proxyRouter *proxyRouter
-	proxyData   proxyDataSource
+	proxyData   Caches
 }
 
 // NewServer builds a new proxy server.
 func NewServer(conf config.Configuration, ownDb *sql.DB, warp *core.Core) *Server {
-	var source proxyDataSource
+	var source Caches
 	if conf.Proxy.CacheAPIs {
-		source = newCachingProxyDataSource(ownDb)
+		q.Q("starting with caching enabled")
+		source = newCaches(asModelDataSource(ownDb), 100)
 	} else {
-		source = newPassthroughProxyDataSource(ownDb)
+		q.Q("starting with caching disable")
+		source = asModelDataSource(ownDb)
 	}
 
 	return &Server{

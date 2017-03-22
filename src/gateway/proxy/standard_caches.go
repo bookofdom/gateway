@@ -21,35 +21,15 @@ type StandardCaches struct {
 func noop(key, value interface{}) {}
 
 func newCaches(dataSource ModelDataSource, cacheSize int) Caches {
-	s := &StandardCaches{
+	return &StandardCaches{
 		endpoints:      newEndpointCache(dataSource, cache.NewLRUCache(cacheSize, noop)),
 		libraries:      newLibraryCache(dataSource, cache.NewLRUCache(cacheSize, noop)),
 		hosts:          newHostCache(dataSource, cache.NewLRUCache(cacheSize, noop)),
+		plans:          newPlanCache(dataSource, cache.NewLRUCache(cacheSize, noop)),
 		planAccountIDs: make(map[int64][]int64),
 		apiEndpointIDs: make(map[int64][]int64),
 		apiHostnames:   make(map[int64][]string),
 	}
-
-	planEvictionHandler := func(key, value interface{}) {
-		s.planAccountIDsMutex.Lock()
-		defer s.planAccountIDsMutex.Unlock()
-
-		plan := value.(*model.Plan)
-		accountid := key.(int64)
-		// remove account id from the plan -> account id map
-		for i, id := range s.planAccountIDs[plan.ID] {
-			if id == accountid {
-				// move it to the end of the slice
-				s.planAccountIDs[plan.ID][i] = s.planAccountIDs[plan.ID][len(s.planAccountIDs[plan.ID])-1]
-				// chop the end of the slice off
-				s.planAccountIDs[plan.ID] = s.planAccountIDs[plan.ID][:len(s.planAccountIDs[plan.ID])-1]
-				break
-			}
-		}
-	}
-
-	s.plans = newPlanCache(dataSource, cache.NewLRUCache(cacheSize, planEvictionHandler))
-	return s
 }
 
 // Endpoint returns an endpoint for the given criteria. Satisfies the Caches interface.
@@ -194,6 +174,26 @@ func (s *StandardCaches) handleAccountNotification(accountid int64) {
 		return
 	}
 
+	val, err := s.plans.Get(accountid)
+	if err != nil {
+		return
+	}
+	plan := val.(*model.Plan)
+
+	s.planAccountIDsMutex.Lock()
+	defer s.planAccountIDsMutex.Unlock()
+
+	// remove account id from the plan -> account id map
+	for i, id := range s.planAccountIDs[plan.ID] {
+		if id == accountid {
+			// move it to the end of the slice
+			s.planAccountIDs[plan.ID][i] = s.planAccountIDs[plan.ID][len(s.planAccountIDs[plan.ID])-1]
+			// chop the end of the slice off
+			s.planAccountIDs[plan.ID] = s.planAccountIDs[plan.ID][:len(s.planAccountIDs[plan.ID])-1]
+			break
+		}
+	}
+
 	s.plans.Remove(accountid)
 }
 
@@ -218,20 +218,61 @@ func (s *StandardCaches) handlePlanNotification(id int64) {
 	for _, accountID := range removedAccountIDs {
 		s.plans.Remove(accountID)
 	}
+
+	s.planAccountIDsMutex.Lock()
+	defer s.planAccountIDsMutex.Unlock()
+
+	delete(s.planAccountIDs, id)
 }
 
 // Reconnect satisfies the Listener interface.
 func (s *StandardCaches) Reconnect() {
-	// TODO(jp) Purge all caches. Add purge to cache interface.
+	s.planAccountIDsMutex.Lock()
+	s.planAccountIDs = make(map[int64][]int64)
+	s.planAccountIDsMutex.Unlock()
+
+	s.apiEndpointIDsMutex.Lock()
+	s.apiEndpointIDs = make(map[int64][]int64)
+	s.apiEndpointIDsMutex.Unlock()
+
+	s.apiHostnamesMutex.Lock()
+	s.apiHostnames = make(map[int64][]string)
+	s.apiHostnamesMutex.Unlock()
+
+	s.endpoints.Purge()
+	s.hosts.Purge()
+	s.libraries.Purge()
 }
 
-// dbDataSource is a proxy pattern that satisfies the ModelDataSource interface.
+// dbDataSource is a proxy pattern that satisfies the ModelDataSource interface. It also
+// satisfies the Caches interface and can be used as a "pass-through" cache in which all
+// calls are passed directly to the database and nothing is stored in-memory.
 type dbDataSource struct {
 	db *apsql.DB
 }
 
-func asDataSource(db *apsql.DB) *dbDataSource {
+func asModelDataSource(db *apsql.DB) *dbDataSource {
 	return &dbDataSource{db}
+}
+
+// Endpoint satisfies the Caches interface.
+func (d *dbDataSource) Endpoint(criteria CacheCriteria) (*model.ProxyEndpoint, error) {
+	return d.FindProxyEndpointForProxy(criteria.(int64), model.ProxyEndpointTypeHTTP)
+}
+
+// Host satisfies the Caches interface.
+func (d *dbDataSource) Host(criteria CacheCriteria) (*model.Host, error) {
+	return d.FindHostForHostname(criteria.(string))
+}
+
+// Libraries satisfies the Caches interface.
+func (d *dbDataSource) Libraries(criteria CacheCriteria) ([]*model.Library, error) {
+	return d.AllLibrariesForProxy(criteria.(int64))
+}
+
+// Plan satisfies the Caches interface.
+func (d *dbDataSource) Plan(criteria CacheCriteria) (*model.Plan, error) {
+	return d.FindPlanByAccountID(criteria.(int64))
 }
 
 // FindProxyEndpointForProxy satisfies the ModelDataSource interface.
