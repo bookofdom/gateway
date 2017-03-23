@@ -144,7 +144,7 @@ func (s *StandardCaches) handleAPINotification(apiid int64) {
 	// remove API's cached libraries
 	s.libraries.Remove(apiid)
 
-	// remove cached endpoints
+	// remove API's cached endpoints
 	s.apiEndpointIDsMutex.RLock()
 	for _, id := range s.apiEndpointIDs[apiid] {
 		s.endpoints.Remove(id)
@@ -163,6 +163,7 @@ func (s *StandardCaches) handleAPINotification(apiid int64) {
 	}
 	s.apiHostnamesMutex.RUnlock()
 
+	// remove API from hostnames map
 	s.apiHostnamesMutex.Lock()
 	delete(s.apiHostnames, apiid)
 	s.apiHostnamesMutex.Unlock()

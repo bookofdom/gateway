@@ -56,6 +56,7 @@ func (b *baseCache) Remove(criteria CacheCriteria) bool {
 	return b.cache.Remove(criteria)
 }
 
+// Purge removes all entries from the cache. Satisfies the DataSourceCache interface.
 func (b *baseCache) Purge() {
 	b.Lock()
 	defer b.Unlock()
