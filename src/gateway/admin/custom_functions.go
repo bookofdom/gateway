@@ -30,7 +30,8 @@ func RouteCustomFunctionBuild(controller *CustomFunctionBuildController, path st
 }
 
 type CustomFunctionBuildResult struct {
-	Time int64 `json:"time"`
+	Time  int64  `json:"time,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 type CustomFunctionLogLine struct {
@@ -62,6 +63,27 @@ func (c *CustomFunctionBuildController) Build(ws *websocket.Conn) {
 	db, r := c.db, ws.Request()
 	accountID, apiID, customFunctionID := c.accountID(r), apiIDFromPath(r), customFunctionIDFromPath(r)
 
+	var err error
+	result := &CustomFunctionBuildResult{}
+	defer func() {
+		if err != nil {
+			result.Error = err.Error()
+		}
+
+		wrapped := struct {
+			Result *CustomFunctionBuildResult `json:"result"`
+		}{result}
+
+		body, err := json.Marshal(&wrapped)
+		if err != nil {
+			return
+		}
+
+		ws.Write(body)
+
+		ws.Close()
+	}()
+
 	customFunction := model.CustomFunction{
 		AccountID: accountID,
 		APIID:     apiID,
@@ -69,7 +91,6 @@ func (c *CustomFunctionBuildController) Build(ws *websocket.Conn) {
 	}
 	function, err := customFunction.Find(db)
 	if err != nil {
-		ws.Close()
 		return
 	}
 
@@ -80,13 +101,11 @@ func (c *CustomFunctionBuildController) Build(ws *websocket.Conn) {
 	}
 	files, err := file.All(db)
 	if err != nil {
-		ws.Close()
 		return
 	}
 
 	input, err := files.Tar()
 	if err != nil {
-		ws.Close()
 		return
 	}
 
@@ -103,31 +122,18 @@ func (c *CustomFunctionBuildController) Build(ws *websocket.Conn) {
 	start := time.Now()
 	err = docker.BuildImage(options)
 	if err != nil {
-		ws.Close()
 		return
 	}
+	result.Time = (time.Since(start).Nanoseconds() + +5e5) / 1e6
 
-	result := &CustomFunctionBuildResult{
-		Time: (time.Since(start).Nanoseconds() + +5e5) / 1e6,
-	}
-
-	wrapped := struct {
-		Result *CustomFunctionBuildResult `json:"result"`
-	}{result}
-
-	body, err := json.Marshal(&wrapped)
+	update, err := docker.TrackImage(function.ImageName(), db)
 	if err != nil {
-		ws.Close()
 		return
 	}
-
-	_, err = ws.Write(body)
+	err = update()
 	if err != nil {
-		ws.Close()
 		return
 	}
-
-	ws.Close()
 
 	return
 }

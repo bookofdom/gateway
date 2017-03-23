@@ -119,9 +119,7 @@ func InspectImage(name string) (*dockerclient.Image, error) {
 	return client.InspectImage(name)
 }
 
-func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface{}, db *apsql.DB) (output *RunOutput, err error) {
-	var stdout, stderr, containerLogs bytes.Buffer
-
+func TrackImage(name string, db *apsql.DB) (func() error, error) {
 	clientID, err := DockerClientID()
 	if err != nil {
 		return nil, err
@@ -144,10 +142,22 @@ func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface
 			return nil, err
 		}
 	}
-	defer func() {
-		err = db.DoInTransaction(func(tx *apsql.Tx) error {
+	return func() error {
+		return db.DoInTransaction(func(tx *apsql.Tx) error {
 			return img.Update(tx)
 		})
+	}, nil
+}
+
+func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface{}, db *apsql.DB) (output *RunOutput, err error) {
+	var stdout, stderr, containerLogs bytes.Buffer
+
+	update, err := TrackImage(name, db)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err = update()
 	}()
 
 	container, err := client.CreateContainer(dockerclient.CreateContainerOptions{
@@ -168,9 +178,9 @@ func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface
 	}
 
 	defer func() {
-		if er := client.RemoveContainer(dockerclient.RemoveContainerOptions{
+		if err = client.RemoveContainer(dockerclient.RemoveContainerOptions{
 			ID: container.ID,
-		}); er != nil {
+		}); err != nil {
 			logreport.Printf("%s Could not remove container %s: %s", config.System, container.ID, err.Error())
 		}
 	}()
@@ -338,32 +348,12 @@ func (dc *DockerConfig) Execute(command string, arguments []string, environmentV
 
 	var stdout, stderr, containerLogs bytes.Buffer
 
-	clientID, err := DockerClientID()
+	update, err := TrackImage(dc.Image(), db)
 	if err != nil {
 		return nil, err
 	}
-	image := DockerImage{
-		ClientID: clientID,
-		Name:     dc.Image(),
-	}
-	img, err := image.Find(db)
-	if err != nil {
-		err = db.DoInTransaction(func(tx *apsql.Tx) error {
-			err := image.Insert(tx)
-			if err != nil {
-				return err
-			}
-			img = &image
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
 	defer func() {
-		err = db.DoInTransaction(func(tx *apsql.Tx) error {
-			return img.Update(tx)
-		})
+		err = update()
 	}()
 
 	container, err := client.CreateContainer(dockerclient.CreateContainerOptions{
