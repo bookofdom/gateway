@@ -219,7 +219,7 @@ test_all: admin assets test test_api test_integration
 test_integration: build test_integration_fast
 
 test_integration_fast: build_tail
-	docker run -p 389:389 -d anypresence/justapis-ldap > ./tmp/.containerid
+	docker run -p 389:389 -d nanoscale/gateway-ldap > ./tmp/.containerid
 	mkdir -p tmp
 	-rm ./tmp/gateway_log.txt
 	-rm ./tmp/gateway_test.db
