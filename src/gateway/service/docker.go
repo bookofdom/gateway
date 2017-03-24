@@ -47,6 +47,10 @@ func DockerImageDeletionService(conf config.Configuration, db *sql.DB) {
 					report("deleting image db entry", err)
 				}
 			}
+
+			if err := docker.Prune(); err != nil {
+				report("image prune", err)
+			}
 		}
 	}()
 }

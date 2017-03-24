@@ -149,6 +149,14 @@ func TrackImage(name string, db *apsql.DB) (func() error, error) {
 	}, nil
 }
 
+func Prune() error {
+	filters := map[string][]string{
+		"dangling": []string{"true"},
+	}
+	_, err := client.PruneImages(dockerclient.PruneImagesOptions{Filters: filters})
+	return err
+}
+
 func ExecuteImage(name string, memory, cpuShares, timeout int64, input interface{}, db *apsql.DB) (output *RunOutput, err error) {
 	var stdout, stderr, containerLogs bytes.Buffer
 
