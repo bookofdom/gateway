@@ -49,7 +49,7 @@ build: vet assets generate
 	go build -o ./bin/gateway ./src/gateway/main.go
 
 build_integration_images:
-	docker build -t anypresence/justapis-ldap test/ldap
+	docker build -t nanoscale/gateway-ldap test/ldap
 
 build_race: vet assets generate
 	go build -race -o ./bin/gateway ./src/gateway/main.go
