@@ -16,7 +16,7 @@ type DockerImage struct {
 
 func (d *DockerImage) AllStale(db *apsql.DB, cutoff time.Duration) ([]*DockerImage, error) {
 	images := []*DockerImage{}
-	err := db.Select(&images, db.SQL("docker_images/all_stale"), d.ClientID, time.Now().Add(-cutoff))
+	err := db.Select(&images, db.SQL("docker_images/all_stale"), d.ClientID, time.Now().UTC().Add(-cutoff))
 	if err != nil {
 		return nil, err
 	}
