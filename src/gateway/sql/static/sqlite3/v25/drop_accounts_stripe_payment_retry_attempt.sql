@@ -12,8 +12,6 @@ CREATE TABLE `accounts` (
   UNIQUE (`stripe_subscription_id`) ON CONFLICT FAIL,
   FOREIGN KEY(`plan_id`) REFERENCES `plans`(`id`) ON DELETE SET NULL
 );
-CREATE INDEX idx_account_stripe_customer_id ON accounts(stripe_customer_id);
-CREATE INDEX idx_account_stripe_subscription_id ON accounts(stripe_subscription_id);
 
 INSERT INTO `accounts`
 SELECT `id`, `created_at`, `updated_at`, `name`, `plan_id`, `stripe_customer_id`, `stripe_subscription_id`
