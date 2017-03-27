@@ -90,6 +90,7 @@ func (db *DB) Migrate() error {
 		migrateToV22,
 		migrateToV23,
 		migrateToV24,
+		migrateToV25,
 	}
 
 	for i := version; i < currentVersion; i++ {

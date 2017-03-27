@@ -12,14 +12,13 @@ import (
 
 // Account represents a single tenant in multi-tenant deployment.
 type Account struct {
-	ID                        int64          `json:"id"`
-	Name                      string         `json:"name"`
-	PlanID                    sql.NullInt64  `json:"plan_id,omitempty" db:"plan_id"`
-	StripeToken               string         `json:"stripe_token,omitempty" db:"-"`
-	StripeCustomerID          sql.NullString `json:"-" db:"stripe_customer_id"`
-	StripeSubscriptionID      sql.NullString `json:"-" db:"stripe_subscription_id"`
-	StripePaymentRetryAttempt int64          `json:"-" db:"stripe_payment_retry_attempt"`
-	UserID                    int64          `json:"-"`
+	ID                   int64          `json:"id"`
+	Name                 string         `json:"name"`
+	PlanID               sql.NullInt64  `json:"plan_id,omitempty" db:"plan_id"`
+	StripeToken          string         `json:"stripe_token,omitempty" db:"-"`
+	StripeCustomerID     sql.NullString `json:"-" db:"stripe_customer_id"`
+	StripeSubscriptionID sql.NullString `json:"-" db:"stripe_subscription_id"`
+	UserID               int64          `json:"-"`
 }
 
 // Validate validates the model.
