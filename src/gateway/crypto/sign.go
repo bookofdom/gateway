@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	_ "crypto/sha512"
+	"encoding/asn1"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -13,6 +14,10 @@ import (
 
 	_ "golang.org/x/crypto/sha3"
 )
+
+type ecdsaSequence struct {
+	R, S *big.Int
+}
 
 type EcdsaSignature struct {
 	R         *big.Int `json:"r"`
@@ -64,11 +69,13 @@ func Sign(data []byte, privKey interface{}, algorithmName string, padding string
 			return nil, err
 		}
 
-		// Append the S bytes to the R bytes and encode using base64 to create a signature. This is the
-		// NSA recommended way to create an elliptic curve signature.
-		signature := r.Bytes()
-		signature = append(signature, s.Bytes()...)
-		sig := &EcdsaSignature{R: r, S: s, Signature: base64.StdEncoding.EncodeToString(signature)}
+		seq := ecdsaSequence{r, s}
+		derSig, err := asn1.Marshal(seq)
+		if err != nil {
+			return nil, err
+		}
+
+		sig := &EcdsaSignature{R: r, S: s, Signature: base64.StdEncoding.EncodeToString(derSig)}
 		return sig, nil
 	default:
 		return nil, errors.New(fmt.Sprintf("invalid or unsupported private key type: %T", privKey))
@@ -116,19 +123,10 @@ func Verify(data []byte, signature string, publicKey interface{}, algorithmName 
 		if err != nil {
 			return false, err
 		}
+		seq := &ecdsaSequence{}
+		asn1.Unmarshal(decodedSignature, seq)
 
-		// The signature is the R and S value mashed together and then encoded using base64, so half
-		// the signature's bits are the R and the remaining half are the S.
-		size := len(decodedSignature) / 2
-
-		rBytes := decodedSignature[:size]
-		sBytes := decodedSignature[size:]
-
-		// Create new big ints and set the bytes to the R and S slices.
-		R := big.NewInt(0).SetBytes(rBytes)
-		S := big.NewInt(0).SetBytes(sBytes)
-
-		valid := ecdsa.Verify(publicKey.(*ecdsa.PublicKey), hashed, R, S)
+		valid := ecdsa.Verify(publicKey.(*ecdsa.PublicKey), hashed, seq.R, seq.S)
 		return valid, nil
 	default:
 		return false, errors.New(fmt.Sprintf("invalid or unsupported public key type: %T", publicKey))
