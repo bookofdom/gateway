@@ -27,6 +27,8 @@ const (
 	RemoteEndpointTypePostgres = "postgres"
 	// RemoteEndpointTypeMongo denotes that a remote endpoint is a MongoDB database
 	RemoteEndpointTypeMongo = "mongodb"
+	// RemoteEndpointTypeMongo denotes that a remote endpoint is a Oracle database
+	RemoteEndpointTypeOracle = "oracle"
 	// RemoteEndpointTypeScript denotes that a remote endpoint is a SOAP service
 	RemoteEndpointTypeScript = "script"
 	// RemoteEndpointTypeSoap denotes that a remote endpoint is a SOAP service
@@ -75,6 +77,7 @@ func InitializeRemoteEndpointTypes(reConf config.RemoteEndpoint) {
 		RemoteEndpointTypeJob:            &RemoteEndpointType{ID: 15, Value: RemoteEndpointTypeJob, Enabled: reConf.JobEnabled},
 		RemoteEndpointTypeKey:            &RemoteEndpointType{ID: 16, Value: RemoteEndpointTypeKey, Enabled: reConf.KeyEnabled},
 		RemoteEndpointTypeCustomFunction: &RemoteEndpointType{ID: 17, Value: RemoteEndpointTypeCustomFunction, Enabled: reConf.CustomFunctionEnabled},
+		RemoteEndpointTypeOracle:         &RemoteEndpointType{ID: 18, Value: RemoteEndpointTypeOracle, Enabled: reConf.OracleEnabled},
 	}
 }
 

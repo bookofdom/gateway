@@ -161,6 +161,11 @@ func (s *Core) PrepareRequest(
 			return nil, invalidTypeErrorMessage(MongoRequest, generic.Type)
 		}
 		return request.NewMongoRequest(s.DBPools, endpoint, data)
+	case model.RemoteEndpointTypeOracle:
+		if generic.Type != OracleRequest {
+			return nil, invalidTypeErrorMessage(OracleRequest, generic.Type)
+		}
+		return request.NewOracleRequest(endpoint, data)
 	case model.RemoteEndpointTypeSoap:
 		if generic.Type != SoapRequest {
 			return nil, invalidTypeErrorMessage(SoapRequest, generic.Type)

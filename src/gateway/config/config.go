@@ -33,6 +33,7 @@ type Configuration struct {
 	Bleve           BleveLogging
 	PostgresLogging PostgresLogging
 	Soap            Soap
+	Oracle          Oracle
 	Store           Store
 	RemoteEndpoint  RemoteEndpoint
 	SMTP            SMTP
@@ -64,6 +65,13 @@ type Soap struct {
 	ThreadPoolSize int64  `flag:"soap-thread-pool-size" default:"0"`
 	JavaOpts       string `flag:"soap-java-opts" default:""`
 	ClientJar      string `flag:"soap-client-jar"        default:"gateway-soap-client.jar"`
+}
+
+// Soap specifies configuration options pertaining to remote SOAP endpoints
+type Oracle struct {
+	FullPath         string `flag:"oracle-full-path"    default:""`
+	OracleClientPort int64  `flag:"oracle-client-port"  default:"19084"`
+	PoolSize         int64  `flag:"oracle-pool-size"  default:"4"`
 }
 
 // Store specifies configuration options for store remote endpoints
@@ -134,6 +142,7 @@ type RemoteEndpoint struct {
 	MySQLEnabled          bool `flag:"remote-endpoint-mysql-enabled" default:"true"`
 	PostgreSQLEnabled     bool `flag:"remote-endpoint-postgresql-enabled" default:"true"`
 	MongoDBEnabled        bool `flag:"remote-endpoint-mongodb-enabled" default:"true"`
+	OracleEnabled         bool `flag:"remote-endpoint-oracle-enabled" default:"true"`
 	StoreEnabled          bool `flag:"remote-endpoint-store-enabled" default:"true"`
 	LDAPEnabled           bool `flag:"remote-endpoint-ldap-enabled" default:"true"`
 	HanaEnabled           bool `flag:"remote-endpoint-hana-enabled" default:"true"`
