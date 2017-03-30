@@ -221,6 +221,19 @@ func main() {
 		}
 	}
 
+	// Configure gateway-oracle
+	if conf.RemoteEndpoint.OracleEnabled {
+		fmt.Printf("\nOracle enabled....\n")
+		logreport.Printf("Configuring Oracle remote endpoint support...")
+		err = sql.oracle.Configure(conf.Oracle, conf.DevMode())
+		if err != nil {
+			conf.RemoteEndpoint.OracleEnabled = false
+			logreport.Printf("%s Unable to configure gateway-oracle due to error: %v.  Gateway-oracle services will not be available.", config.System, err)
+		} else {
+			logreport.Printf("Gateway-oracle remote endpoint support configured.")
+		}
+	}
+
 	// Start up listeners for soap_remote_endpoints, so that we can keep the file system in sync with the DB
 	model.StartSoapRemoteEndpointUpdateListener(db)
 

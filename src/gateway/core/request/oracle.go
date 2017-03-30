@@ -2,11 +2,10 @@ package request
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"gateway/config"
-	"gateway/db/pools"
+	"gateway/db/oracle"
 	sql "gateway/db/sql"
 	"gateway/model"
 )
@@ -14,7 +13,7 @@ import (
 // OracleRequest encapsulates a request made to a Oracle endpoint.
 type OracleRequest struct {
 	sqlRequest
-	Config     *sql.OracleSpec `json:"config"`
+	Config     *oracle.OracleSpec `json:"config"`
 	oracleConf config.Oracle
 }
 
