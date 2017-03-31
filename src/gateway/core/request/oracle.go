@@ -1,13 +1,16 @@
 package request
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-
 	"gateway/config"
 	"gateway/db/oracle"
-	sql "gateway/db/sql"
+	aperrors "gateway/errors"
+	"gateway/logreport"
 	"gateway/model"
+	"io"
+	"net"
 )
 
 // OracleRequest encapsulates a request made to a Oracle endpoint.
@@ -15,6 +18,11 @@ type OracleRequest struct {
 	sqlRequest
 	Config     *oracle.OracleSpec `json:"config"`
 	oracleConf config.Oracle
+}
+
+// OracleResponse encapsulates a response from a OracleRequest
+type OracleResponse struct {
+	Body *json.RawMessage `json:"body"`
 }
 
 func (r *OracleRequest) Log(devMode bool) string {
@@ -27,6 +35,16 @@ func (r *OracleRequest) Log(devMode bool) string {
 
 func (r *OracleRequest) JSON() ([]byte, error) {
 	return json.Marshal(r)
+}
+
+// JSON marshals the OracleResponse to JSON
+func (oracleResponse *OracleResponse) JSON() ([]byte, error) {
+	logreport.Printf("Attempting to marshal oracle response")
+	bytes, err := json.Marshal(&oracleResponse)
+	if err != nil {
+		logreport.Printf("FOUND AN ERROR %s", err)
+	}
+	return bytes, err
 }
 
 func NewOracleRequest(endpoint *model.RemoteEndpoint, data *json.RawMessage) (Request, error) {
@@ -53,14 +71,7 @@ func NewOracleRequest(endpoint *model.RemoteEndpoint, data *json.RawMessage) (Re
 }
 
 func (r *OracleRequest) Perform() Response {
-	response := &OracleResponse{Type: "oracle"}
-
-	defer func() {
-		if r := recover(); r != nil {
-			response.Error = fmt.Sprintf("%v", r)
-		}
-	}()
-
+	// response := &OracleResponse{Type: "oracle"}
 	requestBytes, err := json.Marshal(&r)
 	if err != nil {
 		return NewErrorResponse(aperrors.NewWrapped("[oracle] Unmarshaling request data", err))
@@ -99,16 +110,31 @@ func (r *OracleRequest) Perform() Response {
 		buf.Write(responseBytes[:readlen])
 	}
 
-	return response
+	rawMessage := new(json.RawMessage)
+	decoder := json.NewDecoder(bytes.NewReader(buf.Bytes()))
+	err = decoder.Decode(rawMessage)
+	if err != nil {
+		return NewErrorResponse(aperrors.NewWrapped("[gateway-oracle] Marshaling response", err))
+	}
+
+	return &OracleResponse{Body: rawMessage}
 }
 
 // TODO - refactor to DRY this code up across different data sources
 func (r *OracleRequest) updateWith(endpointData *OracleRequest) {
 	if endpointData.Config != nil {
 		if r.Config == nil {
-			r.Config = &sql.PostgresSpec{}
+			r.Config = &oracle.OracleSpec{}
 		}
 		r.Config.UpdateWith(endpointData.Config)
 	}
 	r.sqlRequest.updateWith(endpointData.sqlRequest)
+}
+
+// Log returns a string containing the deatils to be logged pertaining to the SoapResponse
+func (oracleResponse *OracleResponse) Log() string {
+	var buffer bytes.Buffer
+	bytes := []byte(*oracleResponse.Body)
+	buffer.Write(bytes)
+	return buffer.String()
 }

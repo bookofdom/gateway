@@ -38,6 +38,7 @@ const (
 	PostgresRequest       = "postgres"
 	MySqlRequest          = "mysql"
 	MongoRequest          = "mongo"
+	OracleRequest         = "oracle"
 	SoapRequest           = "soap"
 	LdapRequest           = "ldap"
 	HanaRequest           = "hana"

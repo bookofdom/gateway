@@ -69,9 +69,10 @@ type Soap struct {
 
 // Soap specifies configuration options pertaining to remote SOAP endpoints
 type Oracle struct {
-	FullPath         string `flag:"oracle-full-path"    default:""`
-	OracleClientPort int64  `flag:"oracle-client-port"  default:"19084"`
-	PoolSize         int64  `flag:"oracle-pool-size"  default:"4"`
+	OracleHost string `flag:"oracle-client-host" default:"localhost"`
+	OraclePort int64  `flag:"oracle-client-port" default:"19084"`
+	FullPath   string `flag:"oracle-full-path"    default:""`
+	PoolSize   int64  `flag:"oracle-pool-size"  default:"4"`
 }
 
 // Store specifies configuration options for store remote endpoints

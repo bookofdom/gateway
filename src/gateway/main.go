@@ -16,6 +16,7 @@ import (
 	"gateway/admin"
 	"gateway/config"
 	"gateway/core"
+	"gateway/db/oracle"
 	"gateway/docker"
 	"gateway/errors/report"
 	"gateway/http"
@@ -225,7 +226,7 @@ func main() {
 	if conf.RemoteEndpoint.OracleEnabled {
 		fmt.Printf("\nOracle enabled....\n")
 		logreport.Printf("Configuring Oracle remote endpoint support...")
-		err = sql.oracle.Configure(conf.Oracle, conf.DevMode())
+		err = oracle.Configure(conf.Oracle)
 		if err != nil {
 			conf.RemoteEndpoint.OracleEnabled = false
 			logreport.Printf("%s Unable to configure gateway-oracle due to error: %v.  Gateway-oracle services will not be available.", config.System, err)

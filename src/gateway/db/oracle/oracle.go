@@ -139,6 +139,19 @@ func Connection(c oraSpec) db.Configurator {
 	}
 }
 
+func (r *OracleSpec) UpdateWith(spec *OracleSpec) error {
+	if spec == nil {
+		return errors.New("cannot update Oracle with a nil Specifier")
+	}
+
+	if err := spec.validate(); err != nil {
+		return err
+	}
+
+	*r = *spec
+	return nil
+}
+
 func (d *DB) Update(s db.Specifier) error {
 	spec, ok := s.(*OracleSpec)
 	if !ok {
