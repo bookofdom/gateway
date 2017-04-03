@@ -23,16 +23,17 @@ endif
 ifndef POSTGRES_STATS_DB_NAME
 	POSTGRES_STATS_DB_NAME = "gateway_stats_test"
 endif
+ifndef ADMIN_UI_VERSION
+	ADMIN_UI_VERSION = "3.9.0"
+endif
 
 default: run
 
 admin:
-	cd admin; bundle install; npm install; bower install; node_modules/ember-cli/bin/ember build -output-path ../src/gateway/admin/static/ --environment production
+	npm install gateway-ui@$(ADMIN_UI_VERSION); mv node_modules/gateway-ui admin; rm -rf node_modules; cd admin; bundle install; npm install; bower install; node_modules/ember-cli/bin/ember build -output-path ../src/gateway/admin/static/ --environment production
 	./scripts/templatize-admin.rb src/gateway/admin/static/index.html
 
-docker_admin:
-	cd admin; bundle install; npm rebuild; bower install; node_modules/ember-cli/bin/ember build -output-path ../src/gateway/admin/static/ --environment production
-	./scripts/templatize-admin.rb src/gateway/admin/static/index.html
+docker_admin: admin
 
 assets: install_bindata
 	go-bindata -o src/gateway/admin/bindata.go -pkg admin $(BINDATA_DEBUG) -prefix "src/gateway/admin/static/" src/gateway/admin/static/...
