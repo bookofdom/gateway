@@ -45,11 +45,8 @@ gateway-stats.db
 **.DS_Store
 
 # Admin Front End
-admin/dist
-admin/node_modules
-admin/test/temp
-admin/temp/
-admin/npm-debug.log
+admin
+node_modules
 src/gateway/admin/static
 
 test/cookies
