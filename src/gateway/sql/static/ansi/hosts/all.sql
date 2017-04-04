@@ -7,4 +7,4 @@ FROM hosts, apis
 WHERE hosts.api_id = ?
   AND hosts.api_id = apis.id
   AND apis.account_id = ?
-ORDER BY hosts.name ASC;
+ORDER BY hosts.created_at ASC;
